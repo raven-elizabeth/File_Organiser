@@ -24,8 +24,7 @@ class OrganiseDownloads(System):
     def get_folder_path(self):
         if self.system == "Windows": # Currently assumes folder will be in default location (not in OneDrive, etc.)
             return Path.home() / downloads["windows"]
-        else:
-            return None
+        return None
 
     # Needs to be called optionally (only if folders do not already exist in specified location or if manually called)
     def create_folders(self):
@@ -40,14 +39,24 @@ class OrganiseDownloads(System):
             extension = Path(file).suffix
             if extension:
                 pass # Can I use filetypes or mimetypes or alt to get list of possible extensions, rather than making my own dictionary?
+            return None
 
     def move_files(self):
         pass
 
 
-def run():
-    pass
+class Program(OrganiseDownloads):
+    def __init__(self):
+        super().__init__()
+
+    def check_for_folders(self):
+        pass # return True/False
+
+    def run(self):
+        self.move_files()
 
 
 if __name__ == "__main__":
-    run()
+    Program().run()
+
+# Automate with Task Scheduler for Windows?
