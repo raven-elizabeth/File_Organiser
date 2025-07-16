@@ -1,0 +1,3 @@
+downloads = {
+    "windows": "Downloads"
+}

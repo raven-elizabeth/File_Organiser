@@ -3,6 +3,7 @@ from abc import abstractmethod
 from pathlib import Path
 import os
 from platform import system
+from config import downloads
 
 
 class System:
@@ -19,8 +20,8 @@ class OrganiseDownloads(System):
         super().__init__()
 
     def get_folder_path(self):
-        if self.system == "Windows":
-            pass
+        if self.system == "Windows": # Currently assumes folder will be in default location (not in OneDrive, etc.)
+            return Path.home() / downloads["windows"]
         else:
             return None
 
