@@ -46,31 +46,34 @@ class OrganiseDownloads(System):
 
     @staticmethod
     def get_mime_details(file):
-        if file.is_file(): # If file exists
-            file_details = filetype.guess(file)
-            if file_details: # If filetype guess succeeds
-                details = file_details.mime.split("/")
-                file_type, extension = details
-            else:
-                extension = file.suffix if file.suffix else None
-                file_type = "misc"
-            return file_type,extension
-        return None, None
+        file_details = filetype.guess(file)
+
+        if file_details: # If filetype guess succeeds
+            details = file_details.mime.split("/")
+            file_type= details[0] # Get just the type of the file provided by mime
+        else:
+            file_type = "misc"
+
+        extension = file.suffix if file.suffix else None
+
+        return file_type,extension
 
     # Currently assumes mime type will be identical to name of folders in config
     def register_file_types(self):
         for file in self.path.iterdir():
-            file_type, extension = self.get_mime_details(file)
+            if file.is_file():  # If it is a file (and not a folder)
+                file_type, extension = self.get_mime_details(file)
 
-            if file_type not in downloads["folders"].keys():
-                file_type = "misc"
+                if file_type not in downloads["folders"].keys():
+                    file_type = "misc"
 
-            if extension in code_programs:
-                file_type = "code"
-            elif extension in installers:
-                file_type = "installers"
+                if extension in code_programs:
+                    file_type = "code"
+                elif extension in installers:
+                    file_type = "installers"
 
-            self.files[file.name] = {"folder": downloads["folders"][file_type], "extension": extension}
+                self.files[file.name] = {"folder": downloads["folders"][file_type], "extension": extension}
+                print(self.files[file.name])
 
     @staticmethod
     def get_time_diff(file_path):
@@ -86,8 +89,9 @@ class OrganiseDownloads(System):
             shutil.move(str(source), str(destination))
             print(f"{file} moved to {folder} folder.")
 
-    def trash_old_files(self, folder_path):
-        for file in folder_path:
+    def trash_old_files(self, folder):
+        folder_path = self.path / folder
+        for file in folder_path.iterdir():
             file_type, extension = self.get_mime_details(file)
 
             # Check for date of last modification & how long has passed in seconds
@@ -97,6 +101,7 @@ class OrganiseDownloads(System):
                 # Move file to recycle bin if it has not been modified in given amount of time
                 if time_passed > installer_deletion_countdown:
                     send2trash(file)
+                    print(f"{file} moved to trash")
 
 
 class Program(OrganiseDownloads):
@@ -107,7 +112,7 @@ class Program(OrganiseDownloads):
         self.create_folders()
         self.register_file_types()
         self.move_files()
-        self.trash_old_files(self.path / "Setup Files")
+        self.trash_old_files("Setup Files")
 
 
 if __name__ == "__main__":
