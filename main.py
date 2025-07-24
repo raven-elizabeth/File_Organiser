@@ -1,4 +1,5 @@
 import shutil #(for moving)
+import sys
 from abc import abstractmethod
 from pathlib import Path
 import os
@@ -22,6 +23,10 @@ class OrganiseDownloads(System):
         super().__init__()
         self.path = self.get_folder_path()
         self.files = {}
+
+        if not self.path:
+            print("This program is currently unavailable for your OS.")
+            sys.exit()
 
     def get_folder_path(self):
         if self.system == "Windows": # Currently assumes folder will be in default location (not in OneDrive, etc.)
