@@ -3,7 +3,7 @@ from abc import abstractmethod
 from pathlib import Path
 import os
 from platform import system
-from config import downloads
+from config import downloads, installers, code_programs
 import filetype
 # import googletrans possible to translate name of folders according to language
 
@@ -51,7 +51,12 @@ class OrganiseDownloads(System):
                     extension = file.suffix if file.suffix else None
                     file_type = "misc"
 
-                if extension in
+                if extension in installers:
+                    # Check for date of download & how long has passed (2 weeks = delete)
+                    pass
+
+                elif extension in code_programs:
+                    file_type = "code"
 
                 self.files[file.name] = {"folder": downloads["folders"][file_type], "extension": extension}
                 print(file_type)
