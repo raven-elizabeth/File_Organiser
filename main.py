@@ -8,7 +8,6 @@ from config import downloads, installers, code_programs, installer_deletion_coun
 import filetype
 import time
 from send2trash import send2trash
-# import googletrans possible to translate name of folders according to language
 
 
 class System:
@@ -75,12 +74,6 @@ class OrganiseDownloads(System):
                 self.files[file.name] = {"folder": downloads["folders"][file_type], "extension": extension}
                 print(self.files[file.name])
 
-    @staticmethod
-    def get_time_diff(file_path):
-        date_last_modified = os.path.getmtime(file_path) # This provides last modification date & should work across platforms (gives number of seconds passed since)
-        current_time = time.time()
-        return current_time - date_last_modified
-
     def move_files(self):
         for file in self.files.keys():
             folder = self.files[file]["folder"]
@@ -88,6 +81,12 @@ class OrganiseDownloads(System):
             destination = self.path / folder / file
             shutil.move(str(source), str(destination))
             print(f"{file} moved to {folder} folder.")
+
+    @staticmethod
+    def get_time_diff(file_path):
+        date_last_modified = os.path.getmtime(file_path) # This provides last modification date & should work across platforms (gives number of seconds passed since)
+        current_time = time.time()
+        return current_time - date_last_modified
 
     def trash_old_files(self, folder):
         folder_path = self.path / folder
@@ -100,7 +99,7 @@ class OrganiseDownloads(System):
 
                 # Move file to recycle bin if it has not been modified in given amount of time
                 if time_passed > installer_deletion_countdown:
-                    send2trash(file)
+                    send2trash(file) # Works across OS
                     print(f"{file} moved to trash")
 
 
