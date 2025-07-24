@@ -1,11 +1,13 @@
-import shutil #(for moving)
+import shutil
 import sys
 from abc import abstractmethod
 from pathlib import Path
 import os
 from platform import system
-from config import downloads, installers, code_programs
+from config import downloads, installers, code_programs, installer_deletion_countdown
 import filetype
+import time
+from send2trash import send2trash
 # import googletrans possible to translate name of folders according to language
 
 
@@ -42,31 +44,39 @@ class OrganiseDownloads(System):
             os.makedirs(dir_path, exist_ok=True) # Does not cause error if they already exist
             print(f"Folder created successfully in location: {dir_path}")
 
+    @staticmethod
+    def get_mime_details(file):
+        if file.is_file(): # If file exists
+            file_details = filetype.guess(file)
+            if file_details: # If filetype guess succeeds
+                details = file_details.mime.split("/")
+                file_type, extension = details
+            else:
+                extension = file.suffix if file.suffix else None
+                file_type = "misc"
+            return file_type,extension
+        return None, None
+
     # Currently assumes mime type will be identical to name of folders in config
     def register_file_types(self):
         for file in self.path.iterdir():
-            if file.is_file(): # If file exists
-                file_details = filetype.guess(file)
-                if file_details: # If filetype guess succeeds
-                    details = file_details.mime.split("/")
-                    print(details)
-                    file_type, extension = details
-                    if file_type not in downloads["folders"].keys():
-                        file_type = "misc"
+            file_type, extension = self.get_mime_details(file)
 
-                else:
-                    extension = file.suffix if file.suffix else None
-                    file_type = "misc"
+            if file_type not in downloads["folders"].keys():
+                file_type = "misc"
 
-                if extension in installers:
-                    # Check for date of download & how long has passed (2 weeks = delete)
-                    pass
+            if extension in code_programs:
+                file_type = "code"
+            elif extension in installers:
+                file_type = "installers"
 
-                elif extension in code_programs:
-                    file_type = "code"
+            self.files[file.name] = {"folder": downloads["folders"][file_type], "extension": extension}
 
-                self.files[file.name] = {"folder": downloads["folders"][file_type], "extension": extension}
-                print(file_type)
+    @staticmethod
+    def get_time_diff(file_path):
+        date_last_modified = os.path.getmtime(file_path) # This provides last modification date & should work across platforms (gives number of seconds passed since)
+        current_time = time.time()
+        return current_time - date_last_modified
 
     def move_files(self):
         for file in self.files.keys():
@@ -75,6 +85,18 @@ class OrganiseDownloads(System):
             destination = self.path / folder / file
             shutil.move(str(source), str(destination))
             print(f"{file} moved to {folder} folder.")
+
+    def trash_old_files(self, folder_path):
+        for file in folder_path:
+            file_type, extension = self.get_mime_details(file)
+
+            # Check for date of last modification & how long has passed in seconds
+            if extension in installers:
+                time_passed = self.get_time_diff(file)
+
+                # Move file to recycle bin if it has not been modified in given amount of time
+                if time_passed > installer_deletion_countdown:
+                    send2trash(file)
 
 
 class Program(OrganiseDownloads):
@@ -85,11 +107,11 @@ class Program(OrganiseDownloads):
         self.create_folders()
         self.register_file_types()
         self.move_files()
+        self.trash_old_files(self.path / "Setup Files")
 
 
 if __name__ == "__main__":
     Program().run()
 
 # Automate with Task Scheduler for Windows?
-# Check for .exe (executables & installers) (application folder)
-# Check for code files
+# For cross-platform functionality across operating systems, I will likely need to create classes for each OS with abstract methods
