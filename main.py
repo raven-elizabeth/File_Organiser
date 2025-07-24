@@ -23,7 +23,9 @@ class OrganiseDownloads(System):
         super().__init__()
         self.path = self.get_folder_path()
         self.files = {}
+        self.validate_os()
 
+    def validate_os(self):
         if not self.path:
             print("This program is currently unavailable for your OS.")
             sys.exit()
