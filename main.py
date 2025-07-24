@@ -30,7 +30,7 @@ class OrganiseDownloads(System):
 
     # Needs to be called optionally (only if folders do not already exist in specified location or if manually called)
     def create_folders(self):
-        for folder in downloads["folders"]:
+        for folder in downloads["folders"].values():
             dir_path = self.path / folder
             os.makedirs(dir_path, exist_ok=True) # Does not cause error if they already exist
             print(f"Folder created successfully in location: {dir_path}")
@@ -39,19 +39,22 @@ class OrganiseDownloads(System):
     def register_file_types(self):
         for file in self.path.iterdir():
             if file.is_file(): # If file exists
-                file_type = filetype.guess(file)
-                if file_type:
-                    details = file_type.mime.split("/")
-                    related_folder, extension = details
-                    if related_folder not in downloads["folders"]:
-                        related_folder = "Misc"
+                file_details = filetype.guess(file)
+                if file_details: # If filetype guess succeeds
+                    details = file_details.mime.split("/")
+                    print(details)
+                    file_type, extension = details
+                    if file_type not in downloads["folders"].keys():
+                        file_type = "misc"
 
                 else:
                     extension = file.suffix if file.suffix else None
-                    related_folder = "Misc"
+                    file_type = "misc"
 
-                self.files[file.name] = {"folder": related_folder, "extension": extension}
+                if extension in
 
+                self.files[file.name] = {"folder": downloads["folders"][file_type], "extension": extension}
+                print(file_type)
 
     def move_files(self):
         for file in self.files.keys():
@@ -66,9 +69,6 @@ class Program(OrganiseDownloads):
     def __init__(self):
         super().__init__()
 
-    def check_for_folders(self):
-        pass # return True/False
-
     def run(self):
         self.create_folders()
         self.register_file_types()
@@ -79,3 +79,5 @@ if __name__ == "__main__":
     Program().run()
 
 # Automate with Task Scheduler for Windows?
+# Check for .exe (executables & installers) (application folder)
+# Check for code files
